@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD - Prod/debug/draft/test
+name: Build App
 
 on:
   push:
@@ -31,12 +31,14 @@ jobs:
           hugo-version: '0.119.0'
           extended: true
       - name: Build Website
-        run: hugo web --minify  --destination sqlmon\public
+        run: |
+          cd web
+          hugo  --minify  --destination ../sqlmon/public
       - name: Display Go version
         run: go version   
       - name: Install dependencies
         run: |
-          cd sqlqmon
+          cd ../sqlqmon
           go get .
       - name: Build
         run: go build -v .
