@@ -1,0 +1,44 @@
+name: Azure Static Web Apps CI/CD - Prod/debug/draft/test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job_debug:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job - Debug
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install -D autoprefixer
+      - run: npm install -D postcss-cli
+      - run: npm install -D postcss       
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '^1.21.0' # The Go version to download (if necessary) and use.
+      - run: go version
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.119.0'
+          extended: true
+      - name: Build Website
+        run: hugo web --minify  --destination sqlmon\public
+      - name: Display Go version
+        run: go version   
+      - name: Install dependencies
+        run: |
+          cd sqlqmon
+          go get .
+      - name: Build
+        run: go build -v .
+      - name: List Build files
+        run: ls
