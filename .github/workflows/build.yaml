@@ -44,9 +44,11 @@ jobs:
         run: go version   
       - name: Install dependencies
         run: |
-          cd ../sqlqmon
+          cd sqlqmon
           go get .
       - name: Build
-        run: go build -v .
+        run: | 
+          cd sqlqmon
+          go build -v .
       - name: List Build files
-        run: ls
+        run: ls sqlmon
