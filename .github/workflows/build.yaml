@@ -39,7 +39,8 @@ jobs:
       - name: Build Website
         run: | 
             cd web
-            hugo  --minify --destination ../sqlmon/public
+            hugo  --minify --destination ../sqlqmon/public
+            ls ../sqlqmon/public
       - name: Display Go version
         run: go version   
       - name: Install dependencies
