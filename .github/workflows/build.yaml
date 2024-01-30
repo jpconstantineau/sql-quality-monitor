@@ -31,9 +31,7 @@ jobs:
           hugo-version: '0.119.0'
           extended: true
       - name: Build Website
-        run: |
-          cd web
-          hugo  --minify  --destination ../sqlmon/public
+        run: hugo --source /web --minify --destination /sqlmon/public
       - name: Display Go version
         run: go version   
       - name: Install dependencies
