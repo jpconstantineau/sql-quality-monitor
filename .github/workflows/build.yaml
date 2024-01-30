@@ -18,9 +18,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm install -D autoprefixer
-      - run: npm install -D postcss-cli
-      - run: npm install -D postcss       
+      - run: npm install -g -D autoprefixer
+      - run: npm install -g -D postcss-cli
+      - run: npm install -g -D postcss       
       - uses: actions/setup-go@v4
         with:
           go-version: '^1.21.0' # The Go version to download (if necessary) and use.
@@ -31,9 +31,7 @@ jobs:
           hugo-version: '0.119.0'
           extended: true
       - name: Build Website
-        run: |
-          ls
-          hugo --source ./web --minify --destination ./sqlmon/public
+        run: hugo --source ./web --minify --destination ./sqlmon/public
       - name: Display Go version
         run: go version   
       - name: Install dependencies
