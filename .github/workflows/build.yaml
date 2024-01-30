@@ -49,7 +49,7 @@ jobs:
       - name: Build
         run: | 
           cd sqlqmon
-          env GOOS= windows GOARCH= amd64 go build .
+          env GOOS=windows GOARCH=amd64 go build .
           ls
       - name: List Build files
         run: ls sqlmon
