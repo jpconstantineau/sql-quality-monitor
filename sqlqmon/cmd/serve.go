@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var Files embed.FS
@@ -88,10 +88,9 @@ to quickly create a Cobra application.`,
 		var staticFS1 = http.FS(Files)
 		fs1 := rootPath1(http.FileServer(staticFS1))
 		http.Handle("/", fs1)
-
-		port := os.Getenv("PORT")
+		port := viper.GetString("server.port")
 		if port == "" {
-			port = "3000"
+			port = "3001"
 		}
 
 		log.Printf("Listening on :%s...\n", port)
