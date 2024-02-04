@@ -1,0 +1,2 @@
+exec SQLDataQualityMonitor.dbo.spAgentDaily
+exec SQLDataQualityMonitor.dbo.spAgentRealTime
