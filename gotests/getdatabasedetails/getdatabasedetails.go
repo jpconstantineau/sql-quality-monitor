@@ -18,6 +18,8 @@ var (
 func main() {
 	flag.Parse()
 	done := make(chan bool)
+	channelcount := 9
+
 	ConfigServersChannel := make(chan dbmonitor.ConfigServers, 5)
 	ConfigDatabasesChannel := make(chan dbmonitor.ConfigDatabases, 5)
 	ConfigTablesChannel := make(chan dbmonitor.ConfigTables, 5)
@@ -60,14 +62,9 @@ func main() {
 	dbmonitor.FetchRealTimeTableRows(connString, RealTimeTableRowsChannel)
 	dbmonitor.FetchRealTimeJobs(connString, RealTimeJobsChannel)
 
-	done <- true
-	done <- true
-	done <- true
-	done <- true
-	done <- true
-	done <- true
-	done <- true
-	done <- true
-	done <- true
+	for i := 0; i < channelcount; i++ {
+		done <- true
+	}
+
 	fmt.Printf("bye\n")
 }

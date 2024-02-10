@@ -64,11 +64,13 @@ func TrimRealTimeJobs(input *RealTimeJobs) (result RealTimeJobs) {
 }
 
 func PrintRealTimeJobs(c <-chan RealTimeJobs, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("RJ: %s  %s\n", data.ServerName, data.JobName)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("RJ: %s  %s\n", data.ServerName, data.JobName)
+		case <-done:
+			return
+		}
 	}
 }
 

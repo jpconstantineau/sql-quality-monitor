@@ -42,11 +42,13 @@ func TrimDailyDatabases(input *DailyDatabases) (result DailyDatabases) {
 }
 
 func PrintDailyDatabases(c <-chan DailyDatabases, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("DD: %s  %s\n", data.ServerName, data.DatabaseName)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("DD: %s  %s\n", data.ServerName, data.DatabaseName)
+		case <-done:
+			return
+		}
 	}
 }
 

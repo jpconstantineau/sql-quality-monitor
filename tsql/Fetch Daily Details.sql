@@ -10,7 +10,7 @@ from master.sys.server_principals;
 -- Get Active Users
 -- spRecordUsers
  SELECT convert(varchar(128),SERVERPROPERTY('ServerName')) as ServerName, 
-        sd.name DBName, 
+        sd.name DatabaseName, 
         loginame [Login],
         hostname, 
         [program_name] ProgramName,

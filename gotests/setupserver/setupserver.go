@@ -10,13 +10,20 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
+/*
 type CurrentUsers struct {
 	ServerName  string
-	DBName      string
+	DatabaseName      string
 	Login       string
 	HostName    string
 	ProgramName string
 	LastBatch   string
+}
+*/
+
+type Databases struct {
+	ServerName   string
+	DatabaseName string
 }
 
 var (
@@ -38,7 +45,6 @@ func main() {
 	}
 
 	connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;app name=GoLangAccess", *server, *user, *password, *port)
-	//connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;app name=GoLangAccess", *server, *user, *password, *port)
 
 	if *debug {
 		fmt.Printf(" connString:%s\n", connString)
@@ -50,34 +56,30 @@ func main() {
 	}
 	defer conn.Close()
 
-	stmt, err := conn.Query("SELECT  SERVERPROPERTY('ServerName') as ServerName, sd.name DBName, loginame [Login],	hostname, [program_name] ProgramName, max(last_batch) LastBatch FROM master.dbo.sysprocesses sp  JOIN master.dbo.sysdatabases sd ON sp.dbid = sd.dbid group by loginame, hostname, sd.name, [program_name]")
+	stmt, err := conn.Query("SELECT convert(varchar(128),SERVERPROPERTY('ServerName')) as ServerName, name as DatabaseName FROM sys.databases;")
 	if err != nil {
 		log.Fatal("Prepare failed:", err.Error())
 	}
 	defer stmt.Close()
 
-	var users []CurrentUsers
+	var DBs []Databases
 
 	for stmt.Next() {
-		var user CurrentUsers
-		var usertrimmed CurrentUsers
-		err = stmt.Scan(&user.ServerName, &user.DBName, &user.Login, &user.HostName, &user.ProgramName, &user.LastBatch)
-		usertrimmed.ServerName = strings.TrimSpace(user.ServerName)
-		usertrimmed.DBName = strings.TrimSpace(user.DBName)
-		usertrimmed.Login = strings.TrimSpace(user.Login)
-		usertrimmed.HostName = strings.TrimSpace(user.HostName)
-		usertrimmed.ProgramName = strings.TrimSpace(user.ProgramName)
-		usertrimmed.LastBatch = strings.TrimSpace(user.LastBatch)
+		var db Databases
+		var dbtrimmed Databases
+		err = stmt.Scan(&db.ServerName, &db.DatabaseName)
+		dbtrimmed.ServerName = strings.TrimSpace(db.ServerName)
+		dbtrimmed.DatabaseName = strings.TrimSpace(db.DatabaseName)
 		if err != nil {
 			log.Fatal("Scan failed:", err.Error())
 		}
 		// Append the person to the array
-		users = append(users, usertrimmed)
+		DBs = append(DBs, dbtrimmed)
 	}
 
 	// Print the results
-	for _, user := range users {
-		fmt.Printf("%s  %s  %s  %s  %s  %s\n", user.ServerName, user.DBName, user.Login, user.HostName, user.ProgramName, user.LastBatch)
+	for _, row := range DBs {
+		fmt.Printf("%s  %s\n", row.ServerName, row.DatabaseName)
 	}
 
 	// Check for errors from iterating over rows

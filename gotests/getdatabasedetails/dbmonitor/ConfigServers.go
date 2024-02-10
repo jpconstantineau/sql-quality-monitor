@@ -27,11 +27,14 @@ func TrimConfigServers(input *ConfigServers) (result ConfigServers) {
 }
 
 func PrintConfigServers(c <-chan ConfigServers, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("CS: %s \n", data.ServerName)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("CS: %s \n", data.ServerName)
+		case <-done:
+			fmt.Printf("CS: DONE RECEIVED \n")
+			return
+		}
 	}
 }
 func FetchConfigServers(connString string, c chan ConfigServers) {

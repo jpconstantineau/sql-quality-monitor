@@ -26,11 +26,14 @@ func TrimConfigDatabases(input *ConfigDatabases) (result ConfigDatabases) {
 }
 
 func PrintConfigDatabases(c <-chan ConfigDatabases, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("CD:%s  %s\n", data.ServerName, data.DatabaseName)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("CD:%s  %s\n", data.ServerName, data.DatabaseName)
+		case <-done:
+			fmt.Printf("CD: DONE RECEIVED \n")
+			return
+		}
 	}
 }
 

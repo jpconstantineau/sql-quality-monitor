@@ -32,11 +32,13 @@ func TrimRealTimeTableRows(input *RealTimeTableRows) (result RealTimeTableRows) 
 }
 
 func PrintRealTimeTableRows(c <-chan RealTimeTableRows, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("RT: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("RT: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
+		case <-done:
+			return
+		}
 	}
 }
 

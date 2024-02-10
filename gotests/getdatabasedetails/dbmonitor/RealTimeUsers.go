@@ -32,11 +32,13 @@ func TrimRealTimeUsers(input *RealTimeUsers) (result RealTimeUsers) {
 }
 
 func PrintRealTimeUsers(c <-chan RealTimeUsers, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("RU: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("RU: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
+		case <-done:
+			return
+		}
 	}
 }
 

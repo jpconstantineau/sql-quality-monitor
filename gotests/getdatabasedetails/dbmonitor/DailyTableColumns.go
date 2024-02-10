@@ -32,11 +32,13 @@ func TrimDailyTableColumns(input *DailyTableColumns) (result DailyTableColumns) 
 }
 
 func PrintDailyTableColumns(c <-chan DailyTableColumns, done <-chan bool) {
-	select {
-	case data := <-c: // receiving value from channel
-		fmt.Printf("DC: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
-	case <-done:
-		return
+	for {
+		select {
+		case data := <-c: // receiving value from channel
+			fmt.Printf("DC: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
+		case <-done:
+			return
+		}
 	}
 }
 

@@ -1,0 +1,2 @@
+SELECT  SERVERPROPERTY('ServerName') as ServerName, sd.name DatabaseName, loginame [Login],	hostname, [program_name] ProgramName, max(last_batch) LastBatch 
+FROM master.dbo.sysprocesses sp  JOIN master.dbo.sysdatabases sd ON sp.dbid = sd.dbid group by loginame, hostname, sd.name, [program_name]
