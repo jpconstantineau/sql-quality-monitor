@@ -11,23 +11,32 @@ import (
 type RealTimeTableRows struct {
 	ServerName   string
 	DatabaseName string
-	Login        string
-	HostName     string
-	ProgramName  string
-	LastBatch    string
+	SchemaName   string
+	TableName    string
+	Rows         int32
 }
 
-func QueryRealTimeTableRows() string {
-	return "SELECT  SERVERPROPERTY('ServerName') as ServerName, sd.name DBName, loginame [Login],	hostname, [program_name] ProgramName, max(last_batch) LastBatch FROM master.dbo.sysprocesses sp  JOIN master.dbo.sysdatabases sd ON sp.dbid = sd.dbid group by loginame, hostname, sd.name, [program_name]"
+func QueryRealTimeTableRows(dbname string) string {
+	return `USE ` + dbname + `;
+		SELECT 
+			convert(varchar(128),SERVERPROPERTY('ServerName')) as ServerName,
+			DB_NAME () as DatabaseName,
+			s.name AS SchemaName,
+			t.name AS TableName,
+			p.rows
+		FROM sys.tables t
+		INNER JOIN sys.indexes i ON t.object_id = i.object_id
+		INNER JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+		LEFT OUTER JOIN sys.schemas s ON t.schema_id = s.schema_id
+		GROUP BY  t.name, s.name, p.rows`
 }
 
 func TrimRealTimeTableRows(input *RealTimeTableRows) (result RealTimeTableRows) {
 	result.ServerName = strings.TrimSpace(input.ServerName)
 	result.DatabaseName = strings.TrimSpace(input.DatabaseName)
-	result.Login = strings.TrimSpace(input.Login)
-	result.HostName = strings.TrimSpace(input.HostName)
-	result.ProgramName = strings.TrimSpace(input.ProgramName)
-	result.LastBatch = strings.TrimSpace(input.LastBatch)
+	result.SchemaName = strings.TrimSpace(input.SchemaName)
+	result.TableName = strings.TrimSpace(input.TableName)
+	result.Rows = input.Rows
 	return result
 }
 
@@ -35,14 +44,14 @@ func PrintRealTimeTableRows(c <-chan RealTimeTableRows, done <-chan bool) {
 	for {
 		select {
 		case data := <-c: // receiving value from channel
-			fmt.Printf("RT: %s  %s  %s  %s  %s  %s\n", data.ServerName, data.DatabaseName, data.Login, data.HostName, data.ProgramName, data.LastBatch)
+			fmt.Printf("RROWS: %s.%s.%s.%s \t %d\n", data.ServerName, data.DatabaseName, data.SchemaName, data.TableName, data.Rows)
 		case <-done:
 			return
 		}
 	}
 }
 
-func FetchRealTimeTableRows(connString string, c chan RealTimeTableRows) {
+func FetchRealTimeTableRows(connString string, dbname string, c chan RealTimeTableRows) {
 	conn, err := sql.Open("mssql", connString)
 
 	if err != nil {
@@ -51,7 +60,7 @@ func FetchRealTimeTableRows(connString string, c chan RealTimeTableRows) {
 	defer conn.Close()
 
 	// query starts here
-	stmt, err := conn.Query(QueryRealTimeTableRows())
+	stmt, err := conn.Query(QueryRealTimeTableRows(dbname))
 	if err != nil {
 		log.Fatal("Prepare failed:", err.Error())
 	}
@@ -60,7 +69,7 @@ func FetchRealTimeTableRows(connString string, c chan RealTimeTableRows) {
 	for stmt.Next() {
 		var user RealTimeTableRows
 		var usertrimmed RealTimeTableRows
-		err = stmt.Scan(&user.ServerName, &user.DatabaseName, &user.Login, &user.HostName, &user.ProgramName, &user.LastBatch)
+		err = stmt.Scan(&user.ServerName, &user.DatabaseName, &user.SchemaName, &user.TableName, &user.Rows)
 		if err != nil {
 			log.Fatal("Scan failed:", err.Error())
 		}
