@@ -30,6 +30,7 @@ func InitConfigDB() {
 		id INTEGER PRIMARY KEY,
 		salt TEXT NOT NULL,
 		hash TEXT NOT NULL,
+		tenant TEXT NOT NULL,
 		enabled INTEGER
 		); `)
 
@@ -39,13 +40,16 @@ func InitConfigDB() {
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS servers (
 		id INTEGER PRIMARY KEY,
+		tenantid INTEGER NOT NULL,
 		Server TEXT NOT NULL,
 		Instance TEXT NOT NULL,
 		Port INTEGER NOT NULL,
 		User TEXT NOT NULL,
 		Password TEXT NOT NULL,
 		ServerName TEXT NOT NULL,
-		Monitored INTEGER NOT NULL
+		Monitored INTEGER NOT NULL,
+		FOREIGN KEY (tenantid)
+			REFERENCES sealedkeys (id) 
 		); `)
 
 	if err != nil {
@@ -54,11 +58,13 @@ func InitConfigDB() {
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS databases (
 		id INTEGER PRIMARY KEY,
-		ServerName TEXT NOT NULL,
+		ServerId INTEGER NOT NULL,
 		DatabaseName TEXT NOT NULL,
 		Monitored INTEGER NOT NULL,
 		Daily INTEGER NOT NULL,
-		RealTime INTEGER NOT NULL
+		RealTime INTEGER NOT NULL,
+		FOREIGN KEY (ServerId)
+		REFERENCES servers (id) 
 		); `)
 
 	if err != nil {
@@ -67,12 +73,12 @@ func InitConfigDB() {
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tables (
 		id INTEGER PRIMARY KEY,
-		ServerName TEXT NOT NULL,
-		UserName TEXT NOT NULL,
-		DatabaseName TEXT NOT NULL,
+		DatabaseId INTEGER NOT NULL,
 		SchemaName TEXT NOT NULL,
 		TableName TEXT NOT NULL,
-		RealTime INTEGER NOT NULL
+		RealTime INTEGER NOT NULL,
+		FOREIGN KEY (DatabaseId)
+		REFERENCES databases (id) 
 		); `)
 
 	if err != nil {
