@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var Files embed.FS
@@ -76,7 +75,7 @@ func NoCache(h http.Handler) http.Handler {
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "A brief description of your command",
+	Short: "Start Web Server (only)",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -88,10 +87,7 @@ to quickly create a Cobra application.`,
 		var staticFS1 = http.FS(Files)
 		fs1 := rootPath1(http.FileServer(staticFS1))
 		http.Handle("/", fs1)
-		port := viper.GetString("server.port")
-		if port == "" {
-			port = "3001"
-		}
+		port := "3001"
 
 		log.Printf("Listening on :%s...\n", port)
 		err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
