@@ -2,10 +2,16 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
+	crypto "jpconstantineau/sqlqmon/crypto"
+	"log"
+	"os"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
 
+// ------------------- GENERIC DB FUNCTIONS -------------------
 func connectSqliteDB(dbPath string) (*sql.DB, error) {
 	// Note: the busy_timeout pragma must be first because
 	// the connection needs to be set to block on busy before WAL mode
@@ -19,6 +25,15 @@ func connectSqliteDB(dbPath string) (*sql.DB, error) {
 	return db, nil
 }
 
+type SealKey struct {
+	Id      int64
+	Salt    int64
+	Hash    string
+	Tenant  string
+	Enabled bool
+}
+
+// ------------------- CONFIG DB FUNCTIONS -------------------
 func InitConfigDB() {
 	db, err := connectSqliteDB("./ConfigDB.db")
 	if err != nil {
@@ -26,9 +41,9 @@ func InitConfigDB() {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS sealedkeys (
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS sealkeys (
 		id INTEGER PRIMARY KEY,
-		salt TEXT NOT NULL,
+		salt INTEGER NOT NULL,
 		hash TEXT NOT NULL,
 		tenant TEXT NOT NULL,
 		enabled INTEGER
@@ -87,6 +102,76 @@ func InitConfigDB() {
 
 }
 
+func GetSealKey(tenant string) (key SealKey) {
+	var initkey SealKey
+
+	initkey.Id = 0
+	initkey.Salt = 0
+	initkey.Hash = ""
+	initkey.Tenant = ""
+	initkey.Enabled = false
+
+	db, err := connectSqliteDB("./ConfigDB.db")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	row := db.QueryRow("SELECT id, salt, hash, tenant, enabled FROM sealkeys WHERE enabled = 1 AND tenant=?", tenant)
+
+	if err = row.Scan(&initkey.Id, &initkey.Salt, &initkey.Hash, &initkey.Tenant, &initkey.Enabled); err == sql.ErrNoRows {
+		log.Printf("tenant not found")
+		return initkey
+	}
+
+	return initkey
+}
+
+func PutSealKey(tenant string, hashBase64 string, saltyint int64) (key SealKey) {
+	db, err := connectSqliteDB("./ConfigDB.db")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	var enabled bool
+	enabled = true
+	res, err := db.Exec("INSERT INTO sealkeys VALUES(NULL,?,?,?,?);", saltyint, hashBase64, tenant, enabled)
+	if err != nil {
+		panic(err)
+	}
+
+	var id int64
+	id, err = res.LastInsertId()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Inserted ID: ", id)
+	return GetSealKey(tenant)
+}
+
+func ValidateKey(unsealkey string, tenant string) (key SealKey) {
+	hashBase64, _ := crypto.HashPassword(unsealkey)
+
+	// get stored hashBase64 and saltyint from DB for this tenant
+
+	keydata := GetSealKey(tenant)
+
+	if keydata.Enabled { // if tenant is present check if it's the same
+		// Compare with the currently entered unsealkey
+		if !crypto.ComparePassword(keydata.Hash, unsealkey) {
+			fmt.Println("Keys do not match")
+			os.Exit(1)
+		}
+	} else // if not present - add hashBase64 and to db
+	{
+		saltyint := time.Now().UnixNano()
+		keydata = PutSealKey(tenant, hashBase64, saltyint)
+	}
+
+	return keydata
+}
+
+// ------------------- DATA DB FUNCTIONS -------------------
 func InitDataDB() {
 	db, err := connectSqliteDB("./DataDB.db")
 	if err != nil {
@@ -219,5 +304,4 @@ func InitDataDB() {
 	if err != nil {
 		panic(err)
 	}
-
 }

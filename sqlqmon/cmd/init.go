@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	crypto "jpconstantineau/sqlqmon/crypto"
 	database "jpconstantineau/sqlqmon/database"
 
 	"github.com/spf13/cobra"
@@ -22,11 +23,31 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Setting Up Config DB")
 		database.InitConfigDB()
-		fmt.Println("Setting Up Data DB")
 		database.InitDataDB()
 		fmt.Println("Databases Initialized")
+
+		unsealkeyraw, _ := cmd.Flags().GetString("unsealkey")
+		tenant, _ := cmd.Flags().GetString("tenant")
+		var keydata database.SealKey
+		keydata = database.ValidateKey(unsealkeyraw, tenant)
+
+		// hash is used to validate unsealkey
+		// keydata.Salt is for AES256 encryption - need to reuse the initial one when decrypting saved credentials
+
+		teststr := "TheQuickBrownFoxJumpsOverTheLazyFoxOrDogLookingThing"
+		secret, err := crypto.EncryptSecret(unsealkeyraw, keydata.Salt, teststr)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("original :  ", teststr)
+		fmt.Println("encrypted:  ", secret)
+		tmp, err := crypto.DecryptSecret(unsealkeyraw, keydata.Salt, secret)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("decrypted:  ", tmp)
+
 	},
 }
 
@@ -40,5 +61,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// initCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	initCmd.Flags().String("unsealkey", "", "unseal key")
+	initCmd.Flags().String("tenant", "default", "tenant name for this unseal key")
 }
