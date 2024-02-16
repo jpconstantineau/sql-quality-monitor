@@ -9,11 +9,12 @@ import (
 )
 
 type ServerInputForm struct {
-	HostName  string
-	Port      string
-	UserName  string
-	Password  string
-	Monitored bool
+	HostName   string
+	Port       string
+	UserName   string
+	ServerName string
+	Password   string
+	Monitored  bool
 }
 
 func GetServerFromUser() ServerInputForm {

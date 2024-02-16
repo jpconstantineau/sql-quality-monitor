@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"jpconstantineau/sqlqmon/configdatabase"
+	"jpconstantineau/sqlqmon/forms"
 	"log"
 	"strconv"
 
@@ -19,9 +20,18 @@ func GetConnString(data configdatabase.Server) string {
 	return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;app name=SQLQMon", data.Server, data.User, data.Password, port)
 }
 
-func GetServerName(data configdatabase.Server) string {
+func GetConnStringForm(data forms.ServerInputForm) string {
+	port, err := strconv.Atoi(data.Port)
+	if err != nil {
+		log.Fatal("AtoI Failed for port:", err.Error())
+	}
 
-	conn, err := sql.Open("mssql", GetConnString(data))
+	return fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d;app name=SQLQMon", data.HostName, data.UserName, data.Password, port)
+}
+
+func GetServerName(data forms.ServerInputForm) forms.ServerInputForm {
+
+	conn, err := sql.Open("mssql", GetConnStringForm(data))
 	if err != nil {
 		log.Fatal("Open connection failed:", err.Error())
 	}
@@ -40,6 +50,6 @@ func GetServerName(data configdatabase.Server) string {
 			log.Fatal("Scan failed:", err.Error())
 		}
 	}
-
-	return name
+	data.ServerName = name
+	return data
 }

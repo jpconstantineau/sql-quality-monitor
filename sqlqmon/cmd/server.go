@@ -61,15 +61,12 @@ to quickly create a Cobra application.`,
 
 		var data forms.ServerInputForm
 		data = forms.GetServerFromUser()
-		fmt.Println("Server Name:", data.HostName)
-		// save server
-		var sdata configdatabase.Server
-		sdata = configdatabase.PutServerConfig(data, keydata, unsealkeyraw)
-		fmt.Println("Connecting to: ", sdata.Server)
-		var name string
-		name = monitoreddatabase.GetServerName(sdata)
-		fmt.Println("Received ", name)
-		configdatabase.UpdateServerConfigbyID(sdata.Id, name)
+		// Get server Name from SQL Server
+		fmt.Println("Connecting to: ", data.HostName)
+		sdata := monitoreddatabase.GetServerName(data)
+		var rdata configdatabase.Server
+		rdata = configdatabase.PutServerConfig(sdata, keydata, unsealkeyraw)
+		fmt.Println("Received ", rdata.ServerName)
 	},
 }
 

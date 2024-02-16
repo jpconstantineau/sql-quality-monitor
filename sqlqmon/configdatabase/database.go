@@ -198,7 +198,7 @@ func PutServerConfig(data forms.ServerInputForm, keydata SealKey, unsealkey stri
 		panic(err)
 	}
 
-	res, err := db.Exec("INSERT INTO servers VALUES(NULL,?,?,?,?,?,?,?);", keydata.Id, data.HostName, data.Port, User, Password, "", data.Monitored)
+	res, err := db.Exec("INSERT INTO servers VALUES(NULL,?,?,?,?,?,?,?);", keydata.Id, data.HostName, data.Port, User, Password, data.ServerName, data.Monitored)
 	if err != nil {
 		panic(err)
 	}
@@ -210,25 +210,6 @@ func PutServerConfig(data forms.ServerInputForm, keydata SealKey, unsealkey stri
 	}
 	fmt.Println("Inserted ID: ", id)
 	return GetServerConfigbyID(id, keydata, unsealkey)
-}
-
-func UpdateServerConfigbyID(id int64, name string) {
-	db, err := connectSqliteDB("./ConfigDB.db")
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-	res, err := db.Exec("UPDATE servers SET ServerName = ? WHERE id = ?;", id, name)
-	if err != nil {
-		panic(err)
-	}
-	var rowid int64
-	rowid, err = res.LastInsertId()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Inserted ID: ", rowid)
-
 }
 
 func GetServerConfigbyID(id int64, keydata SealKey, unsealkey string) Server {
