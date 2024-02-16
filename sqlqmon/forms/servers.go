@@ -10,7 +10,6 @@ import (
 
 type ServerInputForm struct {
 	HostName  string
-	Instance  string
 	Port      string
 	UserName  string
 	Password  string
@@ -21,8 +20,7 @@ func GetServerFromUser() ServerInputForm {
 	var data ServerInputForm
 	form := huh.NewForm(
 		huh.NewGroup(
-			huh.NewInput().Title("SQL Server Host Name or IP").Value(&data.HostName),
-			huh.NewInput().Title("SQL Server Instance Name").Value(&data.Instance),
+			huh.NewInput().Title("SQL Server Host\\Instance").Value(&data.HostName),
 			huh.NewInput().Title("SQL Server Port").Value(&data.Port).Validate(func(str string) error {
 				_, err := strconv.Atoi(str)
 				if err != nil {

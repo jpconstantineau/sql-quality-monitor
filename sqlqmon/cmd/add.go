@@ -6,9 +6,6 @@ package cmd
 import (
 	"fmt"
 
-	"jpconstantineau/sqlqmon/database"
-	"jpconstantineau/sqlqmon/forms"
-
 	"github.com/spf13/cobra"
 )
 
@@ -22,15 +19,7 @@ The following steps will need to be performed in order to enable monitoring:
 - enable database [servername] [databasename]
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		unsealkeyraw, _ := cmd.Flags().GetString("unsealkey")
-		tenant, _ := cmd.Flags().GetString("tenant")
-		var keydata database.SealKey
-		keydata = database.ValidateKey(unsealkeyraw, tenant)
-		fmt.Println("Key Validated for: ", keydata.Tenant)
-
-		var data forms.ServerInputForm
-		data = forms.GetServerFromUser()
-		fmt.Println("Server Name:", data.HostName)
+		fmt.Println("add  called")
 	},
 }
 
@@ -46,7 +35,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	addCmd.Flags().String("unsealkey", "", "unseal key")
-	addCmd.Flags().String("tenant", "default", "tenant name for this unseal key")
-
+	addCmd.PersistentFlags().String("unsealkey", "", "unseal key")
+	addCmd.PersistentFlags().String("tenant", "default", "tenant name for this unseal key")
 }

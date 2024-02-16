@@ -4,8 +4,9 @@ go 1.21.1
 
 require (
 	github.com/charmbracelet/huh v0.3.0
+	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/spf13/cobra v1.8.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	modernc.org/sqlite v1.28.0
 )
 
@@ -18,6 +19,8 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
+	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect

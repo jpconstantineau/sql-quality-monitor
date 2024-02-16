@@ -1,9 +1,10 @@
-package database
+package configdatabase
 
 import (
 	"database/sql"
 	"fmt"
 	crypto "jpconstantineau/sqlqmon/crypto"
+	"jpconstantineau/sqlqmon/forms"
 	"log"
 	"os"
 	"time"
@@ -33,6 +34,18 @@ type SealKey struct {
 	Enabled bool
 }
 
+type Server struct {
+	Id         int64
+	Tenantid   int64
+	Server     string
+	Instance   string
+	Port       string
+	User       string
+	Password   string
+	ServerName string
+	Monitored  bool
+}
+
 // ------------------- CONFIG DB FUNCTIONS -------------------
 func InitConfigDB() {
 	db, err := connectSqliteDB("./ConfigDB.db")
@@ -57,14 +70,13 @@ func InitConfigDB() {
 		id INTEGER PRIMARY KEY,
 		tenantid INTEGER NOT NULL,
 		Server TEXT NOT NULL,
-		Instance TEXT NOT NULL,
 		Port INTEGER NOT NULL,
 		User TEXT NOT NULL,
 		Password TEXT NOT NULL,
 		ServerName TEXT NOT NULL,
 		Monitored INTEGER NOT NULL,
 		FOREIGN KEY (tenantid)
-			REFERENCES sealedkeys (id) 
+			REFERENCES sealkeys (id) 
 		); `)
 
 	if err != nil {
@@ -169,6 +181,82 @@ func ValidateKey(unsealkey string, tenant string) (key SealKey) {
 	}
 
 	return keydata
+}
+
+func PutServerConfig(data forms.ServerInputForm, keydata SealKey, unsealkey string) Server {
+	db, err := connectSqliteDB("./ConfigDB.db")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	User, err := crypto.EncryptSecret(unsealkey, keydata.Salt, data.UserName)
+	if err != nil {
+		panic(err)
+	}
+	Password, err := crypto.EncryptSecret(unsealkey, keydata.Salt, data.Password)
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := db.Exec("INSERT INTO servers VALUES(NULL,?,?,?,?,?,?,?);", keydata.Id, data.HostName, data.Port, User, Password, "", data.Monitored)
+	if err != nil {
+		panic(err)
+	}
+
+	var id int64
+	id, err = res.LastInsertId()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Inserted ID: ", id)
+	return GetServerConfigbyID(id, keydata, unsealkey)
+}
+
+func UpdateServerConfigbyID(id int64, name string) {
+	db, err := connectSqliteDB("./ConfigDB.db")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	res, err := db.Exec("UPDATE servers SET ServerName = ? WHERE id = ?;", id, name)
+	if err != nil {
+		panic(err)
+	}
+	var rowid int64
+	rowid, err = res.LastInsertId()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Inserted ID: ", rowid)
+
+}
+
+func GetServerConfigbyID(id int64, keydata SealKey, unsealkey string) Server {
+	var data Server
+	db, err := connectSqliteDB("./ConfigDB.db")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	row := db.QueryRow("SELECT id, tenantid, Server,  Port, User, Password, ServerName, Monitored FROM Servers WHERE id=?", id)
+
+	if err = row.Scan(&data.Id, &data.Tenantid, &data.Server, &data.Port, &data.User, &data.Password, &data.ServerName, &data.Monitored); err == sql.ErrNoRows {
+		log.Printf("Server ID not found")
+		return data
+	}
+
+	User, err := crypto.DecryptSecret(unsealkey, keydata.Salt, data.User)
+	if err != nil {
+		panic(err)
+	}
+	Password, err := crypto.DecryptSecret(unsealkey, keydata.Salt, data.Password)
+	if err != nil {
+		panic(err)
+	}
+	data.User = User
+	data.Password = Password
+	return data
 }
 
 // ------------------- DATA DB FUNCTIONS -------------------

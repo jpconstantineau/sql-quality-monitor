@@ -5,6 +5,9 @@ package cmd
 
 import (
 	"fmt"
+	"jpconstantineau/sqlqmon/configdatabase"
+	"jpconstantineau/sqlqmon/forms"
+	"jpconstantineau/sqlqmon/monitoreddatabase"
 
 	"github.com/spf13/cobra"
 )
@@ -50,7 +53,23 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("add server called")
+		unsealkeyraw, _ := cmd.Flags().GetString("unsealkey")
+		tenant, _ := cmd.Flags().GetString("tenant")
+		var keydata configdatabase.SealKey
+		keydata = configdatabase.ValidateKey(unsealkeyraw, tenant)
+		fmt.Println("Key Validated for: ", keydata.Tenant)
+
+		var data forms.ServerInputForm
+		data = forms.GetServerFromUser()
+		fmt.Println("Server Name:", data.HostName)
+		// save server
+		var sdata configdatabase.Server
+		sdata = configdatabase.PutServerConfig(data, keydata, unsealkeyraw)
+		fmt.Println("Connecting to: ", sdata.Server)
+		var name string
+		name = monitoreddatabase.GetServerName(sdata)
+		fmt.Println("Received ", name)
+		configdatabase.UpdateServerConfigbyID(sdata.Id, name)
 	},
 }
 
